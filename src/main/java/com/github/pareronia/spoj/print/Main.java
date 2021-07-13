@@ -1,13 +1,14 @@
 package com.github.pareronia.spoj.print;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Scanner;
+import java.util.StringTokenizer;
 
 public class Main {
     
@@ -20,7 +21,7 @@ public class Main {
         this.out = out;
     }
     
-    private void handleTestCase(final Scanner sc, final Integer i) {
+    private void handleTestCase(final FastScanner sc, final Integer i) {
         final int m = sc.nextInt();
         final int n = sc.nextInt();
         assert m <= Integer.MAX_VALUE;
@@ -97,7 +98,7 @@ public class Main {
     }
     
     public void solve() {
-        try (final Scanner sc = new Scanner(new BufferedReader(new InputStreamReader(this.in)))) {
+        try (final FastScanner sc = new FastScanner(this.in)) {
             final int numberOfTestCases = sc.nextInt();
             for (int i = 1; i <= numberOfTestCases; i++) {
                 handleTestCase(sc, i);
@@ -108,5 +109,44 @@ public class Main {
 
     public static void main(final String[] args) throws IOException, URISyntaxException {
         new Main(false, System.in, System.out).solve();
+    }
+    
+    private static final class FastScanner implements Closeable {
+        private final BufferedReader br;
+        private StringTokenizer st;
+        
+        public FastScanner(final InputStream in) {
+            this.br = new BufferedReader(new InputStreamReader(in));
+            st = new StringTokenizer("");
+        }
+        
+        public String next() {
+            while (!st.hasMoreTokens()) {
+                try {
+                    st = new StringTokenizer(br.readLine());
+                } catch (final IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return st.nextToken();
+        }
+    
+        public int nextInt() {
+            return Integer.parseInt(next());
+        }
+        
+        @SuppressWarnings("unused")
+        public long nextLong() {
+            return Long.parseLong(next());
+        }
+
+        @Override
+        public void close() {
+            try {
+                this.br.close();
+            } catch (final IOException e) {
+                // ignore
+            }
+        }
     }
 }
