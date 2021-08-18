@@ -2,19 +2,17 @@ package com.github.pareronia.spoj.intest;
 
 import static java.util.Arrays.asList;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.function.Supplier;
 
 public class Main {
@@ -38,7 +36,7 @@ public class Main {
         System.out.println(supplier.get());
     }
     
-    private Result<?> handleTestCase(final FastScanner sc) {
+    private Result<?> handleTestCase(final FastScanner sc) throws IOException {
         int ans = 0;
         final int n = sc.nextInt();
         final int k = sc.nextInt();
@@ -54,7 +52,7 @@ public class Main {
         result.values.stream().map(Object::toString).forEach(this.out::println);
     }
     
-    public void solve() {
+    public void solve() throws IOException {
         try (final FastScanner sc = new FastScanner(this.in)) {
             output(handleTestCase(sc));
         }
@@ -121,41 +119,123 @@ public class Main {
     }
 
     private static final class FastScanner implements Closeable {
-        private final BufferedReader br;
-        private StringTokenizer st;
-        
+        final private int BUFFER_SIZE = 1 << 16;
+        private final DataInputStream din;
+        private final byte[] buffer;
+        private int bufferPointer, bytesRead;
+ 
         public FastScanner(final InputStream in) {
-            this.br = new BufferedReader(new InputStreamReader(in));
-            st = new StringTokenizer("");
+            din = new DataInputStream(in);
+            buffer = new byte[BUFFER_SIZE];
+            bufferPointer = bytesRead = 0;
         }
-        
-        public String next() {
-            while (!st.hasMoreTokens()) {
-                try {
-                    st = new StringTokenizer(br.readLine());
-                } catch (final IOException e) {
-                    throw new RuntimeException(e);
+ 
+        @SuppressWarnings("unused")
+        public String readLine() throws IOException {
+            final byte[] buf = new byte[64]; // line length
+            int cnt = 0, c;
+            while ((c = read()) != -1) {
+                if (c == '\n') {
+                    if (cnt != 0) {
+                        break;
+                    } else {
+                        continue;
+                    }
+                }
+                buf[cnt++] = (byte)c;
+            }
+            return new String(buf, 0, cnt);
+        }
+ 
+        public int nextInt() throws IOException {
+            int ret = 0;
+            byte c = read();
+            while (c <= ' ') {
+                c = read();
+            }
+            final boolean neg = (c == '-');
+            if (neg) {
+                c = read();
+            }
+            do {
+                ret = ret * 10 + c - '0';
+            } while ((c = read()) >= '0' && c <= '9');
+ 
+            if (neg) {
+                return -ret;
+            }
+            return ret;
+        }
+ 
+        @SuppressWarnings("unused")
+        public long nextLong() throws IOException {
+            long ret = 0;
+            byte c = read();
+            while (c <= ' ') {
+                c = read();
+            }
+            final boolean neg = (c == '-');
+            if (neg) {
+                c = read();
+            }
+            do {
+                ret = ret * 10 + c - '0';
+            } while ((c = read()) >= '0' && c <= '9');
+            if (neg) {
+                return -ret;
+            }
+            return ret;
+        }
+ 
+        @SuppressWarnings("unused")
+        public double nextDouble() throws IOException {
+            double ret = 0, div = 1;
+            byte c = read();
+            while (c <= ' ') {
+                c = read();
+            }
+            final boolean neg = (c == '-');
+            if (neg) {
+                c = read();
+            }
+ 
+            do {
+                ret = ret * 10 + c - '0';
+            } while ((c = read()) >= '0' && c <= '9');
+ 
+            if (c == '.') {
+                while ((c = read()) >= '0' && c <= '9') {
+                    ret += (c - '0') / (div *= 10);
                 }
             }
-            return st.nextToken();
-        }
-    
-        public int nextInt() {
-            return Integer.parseInt(next());
-        }
-        
-        @SuppressWarnings("unused")
-        public long nextLong() {
-            return Long.parseLong(next());
-        }
-
-        @Override
-        public void close() {
-            try {
-                this.br.close();
-            } catch (final IOException e) {
-                // ignore
+ 
+            if (neg) {
+                return -ret;
             }
+            return ret;
+        }
+ 
+        private void fillBuffer() throws IOException {
+            bytesRead = din.read(buffer, bufferPointer = 0,
+                                 BUFFER_SIZE);
+            if (bytesRead == -1) {
+                buffer[0] = -1;
+            }
+        }
+ 
+        private byte read() throws IOException {
+            if (bufferPointer == bytesRead) {
+                fillBuffer();
+            }
+            return buffer[bufferPointer++];
+        }
+ 
+        @Override
+        public void close() throws IOException {
+            if (din == null) {
+                return;
+            }
+            din.close();
         }
     }
 }
